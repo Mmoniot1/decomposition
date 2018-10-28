@@ -160,7 +160,7 @@ local MIN_FPS = 5
 local MIN_SPF = 1/MAX_FPS
 local MAX_SPF = 1/MIN_FPS
 
-local function run()
+local function run(x)
 	init()
 	step_time()
 

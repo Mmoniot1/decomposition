@@ -10,7 +10,7 @@ local lg = love.graphics
 local COLORS = {
 	[0] = {15/16, 15/16, 15/16},
 	[1] = {15/16, 15/16, 0},
-	[2] = {1, 0, 0},
+	[2] = {15/16, 1/16, 1/16},
 	[3] = {11/16, 11/16, 11/16},
 }
 local CONSOLE_COMMAND_OFF = 8
@@ -20,8 +20,12 @@ local FONT = lg.newFont('NotoMono.ttf', 12)
 
 local xpcall = xpcall
 local unpack = unpack
+local pairs = pairs
+local type = type
+local tostring = tostring
+local require = require
+local table = table
 local luadebug = debug
-debug = nil
 local date = os.date
 local string = string
 local math = math
@@ -235,19 +239,21 @@ function Console.draw()
 
 	local log_text_height = Log_text:getHeight() + 2
 	local log_height = Console_sy
-	if Command_str ~= '' or Console_prompt_open then
-		local command_text_sy = Command_text:getHeight()
-		log_height = log_height - COMMAND_TEXT_HEIGHT - CONSOLE_COMMAND_OFF
-		lg.setColor(1, 1, 1, .2)
-		lg.rectangle('fill', Console_x, Console_sy - COMMAND_TEXT_HEIGHT - 3, Console_sx, COMMAND_TEXT_HEIGHT + 3)
-		lg.setColor(1, 1, 1, .8)
-		lg.draw(Command_text, Console_x, Console_sy - COMMAND_TEXT_HEIGHT - 2)
-	end
-	lg.setColor(1, 1, 1, .8)
-	lg.draw(Record_text, Console_x + Console_sx, Console_y)
 	if Log_first_display_entry > 0 then
 		log_height = log_height - LOG_TEXT_HEIGHT
 	end
+	if Command_str ~= '' or Console_prompt_open then
+		local command_text_sy = Command_text:getHeight()
+		log_height = log_height - COMMAND_TEXT_HEIGHT - CONSOLE_COMMAND_OFF
+		lg.setColor(0, 0, 0, .8)
+		lg.rectangle('fill', Console_x, Console_sy - COMMAND_TEXT_HEIGHT - 3, Console_sx, COMMAND_TEXT_HEIGHT + 3)
+		lg.setColor(0, 0, 0, .4)
+		lg.rectangle('fill', Console_x, Console_y, Console_sx, log_height)
+		lg.setColor(1, 1, 1, .9)
+		lg.draw(Command_text, Console_x, Console_sy - COMMAND_TEXT_HEIGHT - 2)
+	end
+	lg.setColor(1, 1, 1, .9)
+	lg.draw(Record_text, Console_x + Console_sx, Console_y)
 	lg.setScissor(Console_x, Console_y, Console_sx, log_height)
 	lg.draw(Log_text, Console_x, Console_y + log_height - log_text_height + LOG_TEXT_HEIGHT*Log_first_display_entry)
 	lg.setScissor()
@@ -364,9 +370,7 @@ function Console.run_file(source)
 		Console.log('Console', 'Running game found at', source)
 		local main, errormsg = lf.load(name)--, debugExecption)
 		if main then
-			-- Console.prompt_close()
 			Console.run(source, main)
-			-- Console.prompt_open()
 		else
 			Console.error(source, errormsg)
 			Console.warn('Console', 'Game at '..name..' did not compile')
@@ -404,8 +408,9 @@ function Console.main()
 			return exit_code
 		end
 		if Next_program then
-			Console.prompt_close()
 			repeat--execute the new program
+				Console.prompt_close()
+				Console.record_clear()
 				local program = Next_program
 				local source = Next_source
 				Next_program = nil

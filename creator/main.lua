@@ -48,13 +48,16 @@ local function load(file_name)
 end
 
 local function init()
-	Console.prompt_close()
 	love.keypressed = nil
 	love.textinput = nil
 	love.wheelmoved = nil
 	Controller.connect_to_wheel()
-	Console.source_add_command('save', 'save <file_name>', Console.command_forward_arg(save))
-	Console.source_add_command('load', 'load <file_name>', Console.command_forward_arg(load))
+	Console.add_command('save', 'save <file_name>', function(fields)
+		save(fields[2])
+	end)
+	Console.add_command('load', 'load <file_name>', function(fields)
+		load(fields[2])
+	end)
 	-- Console.source_add_command('export', 'export <file_name>', Console.command_forward_arg(export))
 
 
@@ -69,7 +72,7 @@ local function init()
 	RENDER_DATA = Out.init(INITSTATE)
 end
 
-local KEY_ESCAPE = 'escape'
+local KEY_PROMPT = 'escape'
 
 
 local Text_prompt = {
@@ -123,45 +126,34 @@ local function run()
 	local last_render = get_time()
 
 	local prompt_key = false
-	local prompt_up = false
+	local prompt_is_open = false
 	while true do
 		local exit_code = Console.pump()
 		if exit_code then
 			return exit_code
 		end
 
-		if love.keyboard.isScancodeDown(KEY_ESCAPE) then
+		if love.keyboard.isScancodeDown(KEY_PROMPT) then
 			if not prompt_key then
 				prompt_key = true
-				if prompt_up then
-					prompt_up = false
+				if prompt_is_open then
+					prompt_is_open = false
 					Console.prompt_close()
 					love.keypressed = nil
 					love.textinput = nil
 					love.wheelmoved = nil
-					Controller.connect_to_wheel()
 				else
-					prompt_up = true
-					-- Console.prompt_open()
+					prompt_is_open = true
+					Console.prompt_open()
 					love.keypressed = Console.prompt_key_pressed
 					love.textinput = Console.prompt_text_input
-					love.wheelmoved = function(_, y)
-						if y > 0 then
-							for _ = 1, y do
-								Console.prompt_scroll_up()
-							end
-						elseif y < 0 then
-							for _ = 1, -y do
-								Console.prompt_scroll_down()
-							end
-						end
-					end
+					love.wheelmoved = Console.prompt_scroll
 				end
 			end
 		elseif prompt_key then
 			prompt_key = false
 		end
-		if not prompt_up then
+		if not prompt_is_open then
 			Update()
 		end
 
@@ -188,8 +180,6 @@ local function run()
 		end
 	end
 end
-
-
 
 
 run()

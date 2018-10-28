@@ -2,6 +2,8 @@
 
 local math = math
 local tostring = tostring
+local string = string
+local setmetatable = setmetatable
 local pairs = pairs
 local type = type
 local error = error
