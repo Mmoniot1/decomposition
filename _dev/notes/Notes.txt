@@ -1,0 +1,3 @@
+Module structure follows a communicate by flag and function model
+functions affect the state of the flags, flags are read out by other code
+flags are strictly write-only within a module
